@@ -260,7 +260,7 @@ export default function AppLayout({
   function closeMobileMenu() {
     setMobileOpen(false)
   }
-
+ 
   return (
     <div className="h-dvh overflow-hidden bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-orange-50/80 via-background to-background dark:from-orange-950/20 dark:via-background dark:to-background">
       <div className="mx-auto flex h-full max-w-7xl gap-6 px-4 py-4 sm:px-6 sm:py-5">
