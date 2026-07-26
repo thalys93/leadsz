@@ -7,7 +7,10 @@ on:
 
 jobs:
   deploy:
-    if: startsWith(github.event.head_commit.message, '[DEPLOY]')
+    if: >
+      startsWith(github.event.head_commit.message, '[DEPLOY]') ||
+      startsWith(github.event.head_commit.message, '[DEPLOY-FRONT]') ||
+      startsWith(github.event.head_commit.message, '[DEPLOY-BACK]')
     runs-on: ubuntu-latest
     environment: prod
     env:
