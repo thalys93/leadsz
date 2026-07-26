@@ -1,0 +1,92 @@
+name: Lint and Deploy
+
+on:
+  push:
+    branches:
+      - production
+
+jobs:
+  lint-and-deploy:
+    if: startsWith(github.event.head_commit.message, '[DEPLOY]')
+    runs-on: ubuntu-latest
+    environment: prod
+    env:
+      DEPLOY_FRONT: ${{ startsWith(github.event.head_commit.message, '[DEPLOY-FRONT]') || (startsWith(github.event.head_commit.message, '[DEPLOY]') && !startsWith(github.event.head_commit.message, '[DEPLOY-')) }}
+      DEPLOY_BACK: ${{ startsWith(github.event.head_commit.message, '[DEPLOY-BACK]') || (startsWith(github.event.head_commit.message, '[DEPLOY]') && !startsWith(github.event.head_commit.message, '[DEPLOY-')) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            backend/package-lock.json
+            frontend/package-lock.json
+
+      - name: Install backend
+        if: env.DEPLOY_BACK == 'true'
+        working-directory: backend
+        run: npm ci
+
+      - name: Lint backend
+        if: env.DEPLOY_BACK == 'true'
+        working-directory: backend
+        run: npm run lint
+
+      - name: Install frontend
+        if: env.DEPLOY_FRONT == 'true'
+        working-directory: frontend
+        run: npm ci
+
+      - name: Lint frontend
+        if: env.DEPLOY_FRONT == 'true'
+        working-directory: frontend
+        run: npm run lint
+
+      - name: Build frontend
+        if: env.DEPLOY_FRONT == 'true'
+        working-directory: frontend
+        env:
+          VITE_API_URL: https://leadz-api.thalysdev.com/api
+          VITE_API_VERSION: v0
+          VITE_APP_ENV: production
+        run: npm run build
+
+      - name: Deploy frontend to Firebase
+        if: env.DEPLOY_FRONT == 'true'
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_LEADSZ }}
+          channelId: live
+          projectId: leadsz-5952e
+          entryPoint: frontend
+
+      - name: Connect Tailscale
+        if: env.DEPLOY_BACK == 'true'
+        uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+          tags: tag:ci
+          version: latest
+
+      - name: Deploy backend via SSH
+        if: env.DEPLOY_BACK == 'true'
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          script: |
+            set -e
+            cd "/home/smart/Área de trabalho/servers/tools/leadsz"
+            git fetch origin
+            git checkout production
+            git pull origin production
+            cd backend
+            npm run deploy
