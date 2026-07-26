@@ -52,7 +52,8 @@ export class MessageTemplateController {
   @Post('generate')
   @HttpCode(200)
   @ApiOperation({
-    summary: 'Gerar rascunho de template reutilizável via Groq (com [[placeholders]])',
+    summary:
+      'Gerar rascunho de template reutilizável via Groq (com [[placeholders]])',
   })
   @ApiBody({ type: GenerateLibraryTemplateDto })
   generateLibrary(

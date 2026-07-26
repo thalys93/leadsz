@@ -1,16 +1,8 @@
 import { Body, Controller, HttpCode, Post, UseGuards } from '@nestjs/common';
-import {
-  ApiBearerAuth,
-  ApiBody,
-  ApiOperation,
-  ApiTags,
-} from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { MailService } from './mail.service';
-import {
-  SendTestMailDto,
-  TestMailTemplate,
-} from './dto/send-test-mail.dto';
+import { SendTestMailDto, TestMailTemplate } from './dto/send-test-mail.dto';
 import { RolesGuard } from 'src/security/roles.guard';
 import { RolesDecorator } from 'src/security/roles.decorator';
 import { USER_ROLES } from 'src/enums/RoleGroups';

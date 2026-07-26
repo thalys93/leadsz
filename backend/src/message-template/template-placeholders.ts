@@ -11,14 +11,11 @@ export const TEMPLATE_PLACEHOLDER_KEYS = [
   'nextActionAt',
 ] as const;
 
-export type TemplatePlaceholderKey =
-  (typeof TEMPLATE_PLACEHOLDER_KEYS)[number];
+export type TemplatePlaceholderKey = (typeof TEMPLATE_PLACEHOLDER_KEYS)[number];
 
 const PLACEHOLDER_RE = /\[\[([a-zA-Z0-9_]+)\]\]/g;
 
-export function buildLeadPlaceholderValues(
-  lead: Lead,
-): Record<string, string> {
+export function buildLeadPlaceholderValues(lead: Lead): Record<string, string> {
   return {
     contactName: lead.contactName ?? '',
     companyName: lead.companyName ?? '',
@@ -44,10 +41,10 @@ export function interpolateTemplate(
 }
 
 if (process.env.NODE_ENV === 'test' || process.argv.includes('--self-check')) {
-  const sample = interpolateTemplate(
-    'Oi [[contactName]] da [[companyName]]',
-    { contactName: 'Ana', companyName: 'Acme' },
-  );
+  const sample = interpolateTemplate('Oi [[contactName]] da [[companyName]]', {
+    contactName: 'Ana',
+    companyName: 'Acme',
+  });
   if (sample !== 'Oi Ana da Acme') {
     throw new Error('template-placeholders self-check failed');
   }
