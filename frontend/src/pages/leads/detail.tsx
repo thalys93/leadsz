@@ -71,7 +71,12 @@ export default function LeadDetailPage() {
 
   return (
     <div className="space-y-6">
-      <Button variant="ghost" size="sm" onClick={() => navigate("/app/leads")}>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="hidden md:inline-flex"
+        onClick={() => navigate("/app/leads")}
+      >
         <ArrowLeft className="size-4" />
         Voltar para leads
       </Button>

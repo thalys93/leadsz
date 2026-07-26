@@ -1,6 +1,15 @@
 import { useState } from "react"
-import { NavLink, useNavigate } from "react-router-dom"
-import { ChevronDown, Eye, EyeOff, Menu, Palette } from "lucide-react"
+import { Link, NavLink, useLocation, useNavigate } from "react-router-dom"
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
+import {
+  ArrowLeft,
+  ChevronDown,
+  Eye,
+  EyeOff,
+  Home,
+  Menu,
+  Palette,
+} from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Sheet,
@@ -34,6 +43,21 @@ import {
   type NavItemId,
   type NavPrefs,
 } from "@/lib/nav-prefs"
+
+const APP_HOME = "/app/dashboard"
+
+function resolveBackTarget(pathname: string): string | null {
+  if (pathname === APP_HOME || pathname === "/app") return null
+  if (/^\/app\/leads\/[^/]+/.test(pathname)) return "/app/leads"
+  if (
+    pathname === "/app/templates/new" ||
+    /^\/app\/templates\/[^/]+\/edit$/.test(pathname)
+  ) {
+    return "/app/templates"
+  }
+  if (pathname.startsWith("/app/")) return APP_HOME
+  return null
+}
 
 const linkClass = ({ isActive }: { isActive: boolean }) =>
   cn(
@@ -211,11 +235,17 @@ export default function AppLayout({
   children: React.ReactNode
 }) {
   const navigate = useNavigate()
+  const location = useLocation()
   const user = useAuthStore((s) => s.user)
   const logout = useAuthStore((s) => s.logout)
   const isAdmin = user?.companyRole === "ADMIN"
   const [mobileOpen, setMobileOpen] = useState(false)
   const [prefs, setPrefs] = useState<NavPrefs>(() => loadNavPrefs())
+  const backTarget = resolveBackTarget(location.pathname)
+  const reduceMotion = useReducedMotion()
+  const backMotion = reduceMotion
+    ? { duration: 0 }
+    : { duration: 0.22, ease: [0.22, 1, 0.36, 1] as const }
 
   function handlePrefsChange(next: NavPrefs) {
     setPrefs(next)
@@ -225,6 +255,10 @@ export default function AppLayout({
   function handleLogout() {
     logout()
     navigate("/")
+  }
+
+  function closeMobileMenu() {
+    setMobileOpen(false)
   }
 
   return (
@@ -243,46 +277,100 @@ export default function AppLayout({
         </aside>
 
         <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-3">
-          <header className="flex shrink-0 items-center justify-between gap-3 border-b border-border pb-3 md:hidden">
-            <div className="flex items-center gap-2">
-              <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-                <SheetTrigger asChild>
-                  <Button variant="ghost" size="icon" aria-label="Abrir menu">
-                    <Menu className="size-5" />
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="left" className="flex w-[18rem] flex-col gap-6">
-                  <SheetHeader>
-                    <SheetTitle className="text-left">
-                      <BrandLogo
-                        variant="lockup"
-                        className="h-7 w-auto max-w-[9rem]"
-                      />
-                    </SheetTitle>
-                  </SheetHeader>
-                  <BrandBlock />
-                  <AppNav
-                    isAdmin={!!isAdmin}
-                    prefs={prefs}
-                    onPrefsChange={handlePrefsChange}
-                    onNavigate={() => setMobileOpen(false)}
-                  />
-                  <div className="mt-auto border-t border-border pt-4">
-                    <UserAvatarMenu
-                      onLogout={() => {
-                        setMobileOpen(false)
-                        handleLogout()
-                      }}
+          <header className="flex h-12 shrink-0 items-center justify-between gap-2 border-b border-border md:hidden">
+            <div className="flex min-w-0 items-center">
+              <AnimatePresence initial={false}>
+                {backTarget ? (
+                  <motion.div
+                    key="back"
+                    initial={{ width: 0, opacity: 0 }}
+                    animate={{ width: "2.75rem", opacity: 1 }}
+                    exit={{ width: 0, opacity: 0 }}
+                    transition={backMotion}
+                    className="overflow-hidden"
+                  >
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="size-11 shrink-0"
+                      aria-label="Voltar"
+                      onClick={() => navigate(backTarget)}
+                    >
+                      <motion.span
+                        initial={{ x: -8 }}
+                        animate={{ x: 0 }}
+                        exit={{ x: -8 }}
+                        transition={backMotion}
+                        className="inline-flex"
+                      >
+                        <ArrowLeft className="size-5" />
+                      </motion.span>
+                    </Button>
+                  </motion.div>
+                ) : null}
+              </AnimatePresence>
+              <div className="flex min-w-0 items-center gap-1">
+                <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+                  <SheetTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="size-11 shrink-0"
+                      aria-label="Abrir menu"
+                    >
+                      <Menu className="size-5" />
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent
+                    side="left"
+                    className="flex w-[18rem] flex-col gap-6 overflow-y-auto"
+                  >
+                    <SheetHeader className="space-y-3">
+                      <SheetTitle className="sr-only">
+                        Menu de navegação
+                      </SheetTitle>
+                      <Button
+                        asChild
+                        variant="ghost"
+                        className="h-11 justify-start gap-2 px-3"
+                      >
+                        <Link to={APP_HOME} onClick={closeMobileMenu}>
+                          <Home className="size-4 shrink-0" />
+                          Início
+                        </Link>
+                      </Button>
+                    </SheetHeader>
+                    <AppNav
+                      isAdmin={!!isAdmin}
+                      prefs={prefs}
+                      onPrefsChange={handlePrefsChange}
+                      onNavigate={closeMobileMenu}
                     />
-                  </div>
-                </SheetContent>
-              </Sheet>
-              <BrandLogo variant="mark" className="size-8" />
-              <EnvBadge />
+                    <div className="mt-auto border-t border-border pt-4">
+                      <UserAvatarMenu
+                        onNavigate={closeMobileMenu}
+                        onLogout={() => {
+                          closeMobileMenu()
+                          handleLogout()
+                        }}
+                      />
+                    </div>
+                  </SheetContent>
+                </Sheet>
+                <Link
+                  to={APP_HOME}
+                  className="ml-1 min-w-0 rounded-md outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
+                  aria-label="Ir para o início"
+                >
+                  <BrandLogo
+                    variant="lockup"
+                    className="h-7 w-auto max-w-[8rem] sm:max-w-[10.5rem]"
+                  />
+                </Link>
+                <EnvBadge />
+              </div>
             </div>
-            <div className="flex items-center gap-1">
-              <UserAvatarMenu compact onLogout={handleLogout} />
-            </div>
+            <UserAvatarMenu compact onLogout={handleLogout} />
           </header>
           <main className="min-h-0 min-w-0 flex-1 overflow-y-auto">{children}</main>
         </div>
