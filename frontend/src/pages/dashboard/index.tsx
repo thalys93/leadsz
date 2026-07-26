@@ -260,21 +260,21 @@ export default function DashboardPage() {
         </>
       )}
 
-      <section className="grid shrink-0 grid-cols-2 gap-2">
+      <section className="hidden shrink-0 grid-cols-2 gap-2 md:grid">
         <button
           type="button"
           onClick={() => setLeadDialogOpen(true)}
-          className="group flex min-h-11 items-center gap-2.5 rounded-xl border border-border bg-card/80 px-2.5 py-2 text-left transition-all hover:border-ember/40 hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:gap-3 sm:px-3 sm:py-2.5"
+          className="group flex min-h-11 items-center gap-2.5 rounded-xl border border-border bg-card/80 px-3 py-2.5 text-left transition-all hover:border-ember/40 hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
-          <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-ember/10 text-ember transition-transform duration-200 group-hover:scale-105 sm:size-9">
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-ember/10 text-ember transition-transform duration-200 group-hover:scale-105">
             <UserPlus className="size-4" />
           </span>
           <span className="min-w-0 flex-1">
             <span className="flex items-center gap-1 font-display text-sm font-semibold tracking-tight">
               Novo lead
-              <ArrowUpRight className="hidden size-3 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 sm:block" />
+              <ArrowUpRight className="size-3 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
             </span>
-            <span className="hidden truncate text-xs text-muted-foreground sm:block">
+            <span className="truncate text-xs text-muted-foreground">
               Contato e próxima ação.
             </span>
           </span>
@@ -282,22 +282,50 @@ export default function DashboardPage() {
 
         <Link
           to="/app/templates/new"
-          className="group flex min-h-11 items-center gap-2.5 rounded-xl border border-border bg-card/80 px-2.5 py-2 text-left transition-all hover:border-ember/40 hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:gap-3 sm:px-3 sm:py-2.5"
+          className="group flex min-h-11 items-center gap-2.5 rounded-xl border border-border bg-card/80 px-3 py-2.5 text-left transition-all hover:border-ember/40 hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
-          <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-secondary text-foreground transition-transform duration-200 group-hover:scale-105 sm:size-9">
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-secondary text-foreground transition-transform duration-200 group-hover:scale-105">
             <FileText className="size-4" />
           </span>
           <span className="min-w-0 flex-1">
             <span className="flex items-center gap-1 font-display text-sm font-semibold tracking-tight">
               Novo template
-              <ArrowUpRight className="hidden size-3 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 sm:block" />
+              <ArrowUpRight className="size-3 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
             </span>
-            <span className="hidden truncate text-xs text-muted-foreground sm:block">
+            <span className="truncate text-xs text-muted-foreground">
               Mensagem para follow-up.
             </span>
           </span>
         </Link>
       </section>
+
+      <nav
+        aria-label="Ações rápidas"
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 backdrop-blur-md md:hidden"
+        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+      >
+        <div className="mx-auto grid max-w-7xl grid-cols-2">
+          <button
+            type="button"
+            onClick={() => setLeadDialogOpen(true)}
+            className="flex min-h-14 flex-col items-center justify-center gap-1 px-2 py-2 text-ember transition-colors hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+          >
+            <UserPlus className="size-5" />
+            <span className="text-[11px] font-medium leading-none">Novo lead</span>
+          </button>
+          <Link
+            to="/app/templates/new"
+            className="flex min-h-14 flex-col items-center justify-center gap-1 px-2 py-2 text-foreground transition-colors hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+          >
+            <FileText className="size-5" />
+            <span className="text-[11px] font-medium leading-none">
+              Novo template
+            </span>
+          </Link>
+        </div>
+      </nav>
+
+      <div className="h-16 shrink-0 md:hidden" aria-hidden />
 
       <LeadFormDialog
         open={leadDialogOpen}
