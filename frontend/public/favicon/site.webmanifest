@@ -1,0 +1,19 @@
+{
+  "name": "Leadz",
+  "short_name": "Leadz",
+  "icons": [
+    {
+      "src": "/brand/app-icon-light.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/brand/app-icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "theme_color": "#E25112",
+  "background_color": "#FCFAF8",
+  "display": "standalone"
+}

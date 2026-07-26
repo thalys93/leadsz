@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{appName}}{{#if pageTitle}} — {{pageTitle}}{{/if}}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet" />
+</head>
+<body style="margin:0;padding:0;background:#FAF8F5;color:#171F26;font-family:'Source Sans 3',Arial,Helvetica,sans-serif;-webkit-font-smoothing:antialiased;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#FAF8F5;padding:32px 16px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:560px;background:#ffffff;border:1px solid #E5DFD8;border-radius:8px;overflow:hidden;">
+          <tr>
+            <td style="height:3px;background:#E25112;font-size:0;line-height:0;">&nbsp;</td>
+          </tr>
+          <tr>
+            <td style="padding:20px 28px 12px;">
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                <tr>
+                  <td style="vertical-align:middle;padding-right:10px;">
+                    <img src="{{iconUrl}}" alt="" width="32" height="32" style="display:block;width:32px;height:32px;border:0;border-radius:6px;" />
+                  </td>
+                  <td style="vertical-align:middle;">
+                    <img src="{{wordmarkUrl}}" alt="{{appName}}" width="96" style="display:block;width:96px;height:auto;border:0;" />
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:8px 28px 32px;font-size:16px;line-height:1.55;color:#171F26;font-family:'Source Sans 3',Arial,Helvetica,sans-serif;">
+              {{body}}
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:16px 28px;background:#1F2A33;text-align:center;">
+              <p style="margin:0;font-size:13px;color:#F7F5F3;font-family:'Source Sans 3',Arial,Helvetica,sans-serif;">© {{appName}}. Todos os direitos reservados.</p>
+            </td>
+          </tr>
+        </table>
+        <p style="margin:20px 0 0;font-size:13px;color:#5E6B78;text-align:center;font-family:'Source Sans 3',Arial,Helvetica,sans-serif;">Mensagem automática — não responda.</p>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

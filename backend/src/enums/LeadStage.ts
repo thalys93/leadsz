@@ -1,0 +1,10 @@
+export enum LeadStage {
+  LEAD = 'LEAD',
+  CONTATADO = 'CONTATADO',
+  PROPOSTA = 'PROPOSTA',
+  REUNIAO = 'REUNIAO',
+  FECHADO = 'FECHADO',
+  ENTREGA = 'ENTREGA',
+  PAGO = 'PAGO',
+  PERDIDO = 'PERDIDO',
+}

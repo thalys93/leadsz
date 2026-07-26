@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "hooks": {
+    "beforeSubmitPrompt": [
+      {
+        "command": "node .cursor/hooks/remind-feature-docs.js"
+      }
+    ]
+  }
+}

@@ -1,0 +1,7 @@
+export enum ChannelType {
+  EMAIL = 'EMAIL',
+  WHATSAPP = 'WHATSAPP',
+  LINKEDIN = 'LINKEDIN',
+  INSTAGRAM = 'INSTAGRAM',
+  OUTRO = 'OUTRO',
+}

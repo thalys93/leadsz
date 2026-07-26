@@ -1,0 +1,67 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 40 33% 98%;
+    --foreground: 210 24% 12%;
+    --card: 0 0% 100%;
+    --card-foreground: 210 24% 12%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 210 24% 12%;
+    --primary: 210 24% 16%;
+    --primary-foreground: 40 33% 98%;
+    --secondary: 35 30% 94%;
+    --secondary-foreground: 210 24% 16%;
+    --muted: 35 20% 94%;
+    --muted-foreground: 215 12% 42%;
+    --accent: 22 90% 94%;
+    --accent-foreground: 18 70% 28%;
+    --destructive: 0 72% 48%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 30 16% 88%;
+    --input: 30 16% 88%;
+    --ring: 18 85% 48%;
+    --ember: 18 85% 48%;
+    --radius: 0.5rem;
+  }
+  .dark {
+    --background: 210 20% 8%;
+    --foreground: 40 20% 96%;
+    --card: 210 18% 11%;
+    --card-foreground: 40 20% 96%;
+    --popover: 210 18% 11%;
+    --popover-foreground: 40 20% 96%;
+    --primary: 40 20% 96%;
+    --primary-foreground: 210 20% 10%;
+    --secondary: 210 14% 16%;
+    --secondary-foreground: 40 20% 96%;
+    --muted: 210 14% 16%;
+    --muted-foreground: 215 12% 65%;
+    --accent: 18 40% 18%;
+    --accent-foreground: 22 90% 72%;
+    --destructive: 0 62% 42%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 210 12% 20%;
+    --input: 210 12% 20%;
+    --ring: 18 85% 55%;
+    --ember: 18 85% 55%;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: "Source Sans 3", ui-sans-serif, system-ui, sans-serif;
+  }
+  .font-display {
+    font-family: Syne, ui-sans-serif, system-ui, sans-serif;
+  }
+  .text-ember {
+    color: hsl(var(--ember));
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+}

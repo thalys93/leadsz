@@ -1,0 +1,7 @@
+export enum TimelineEventType {
+  NOTE = 'NOTE',
+  TEMPLATE_USED = 'TEMPLATE_USED',
+  STAGE_CHANGE = 'STAGE_CHANGE',
+  CHECKPOINT = 'CHECKPOINT',
+  EMAIL_SENT = 'EMAIL_SENT',
+}

@@ -1,0 +1,24 @@
+# ponytail: porta 5432 já usada por cade_meu_rango_db no host;
+# use DB_PORT=5433 neste compose OU crie o DB `leadsz` no Postgres já rodando.
+services:
+  leadsz_db:
+    image: postgres:16
+    container_name: leadsz_db
+    restart: always
+    env_file: .env
+    environment:
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres_data:
