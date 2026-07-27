@@ -20,6 +20,7 @@ import {
   DEFAULT_PHONE_COUNTRY,
   formatNationalNumber,
   getPhoneCountry,
+  onlyPhoneDigits,
   parsePhone,
   PHONE_COUNTRIES,
   type PhoneCountry,
@@ -69,7 +70,8 @@ export function PhoneInput({
   }, [value])
 
   const country = getPhoneCountry(iso)
-  const nationalDisplay = formatNationalNumber(parsed.nationalDigits, country.iso)
+  const displayIso = value.trim() ? parsed.iso : iso
+  const nationalDisplay = formatNationalNumber(parsed.nationalDigits, displayIso)
 
   const filteredCountries = useMemo(() => {
     const term = query.trim().toLowerCase()
@@ -82,6 +84,12 @@ export function PhoneInput({
     )
   }, [query])
 
+  function applyParsedPhone(raw: string) {
+    const next = parsePhone(raw, iso)
+    setIso(next.iso)
+    onChange(composePhone(next.iso, next.nationalDigits))
+  }
+
   function selectCountry(next: PhoneCountry) {
     setIso(next.iso)
     onChange(composePhone(next.iso, parsed.nationalDigits))
@@ -89,8 +97,12 @@ export function PhoneInput({
   }
 
   function handleNationalChange(raw: string) {
-    const digits = raw.replace(/\D/g, "").slice(0, country.maxNationalLength)
-    onChange(composePhone(iso, digits))
+    const allDigits = onlyPhoneDigits(raw)
+    if (raw.includes("+") || allDigits.length > country.maxNationalLength) {
+      applyParsedPhone(raw.includes("+") ? raw : allDigits)
+      return
+    }
+    onChange(composePhone(iso, allDigits))
   }
 
   return (
@@ -161,6 +173,15 @@ export function PhoneInput({
         disabled={disabled}
         value={nationalDisplay}
         onChange={(e) => handleNationalChange(e.target.value)}
+        onPaste={(e) => {
+          const text = e.clipboardData.getData("text")
+          const digits = onlyPhoneDigits(text)
+          if (!text.includes("+") && digits.length <= country.maxNationalLength) {
+            return
+          }
+          e.preventDefault()
+          applyParsedPhone(text.trim().startsWith("+") ? text : digits)
+        }}
         placeholder={placeholder}
         aria-invalid={ariaInvalid}
         className="h-full rounded-none border-0 bg-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"

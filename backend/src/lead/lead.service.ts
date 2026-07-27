@@ -74,13 +74,17 @@ export class LeadService {
   }
 
   private uniqueChannels(channels: CreateLeadChannelDto[] = []) {
-    const byType = new Map<ChannelType, string>();
+    const seen = new Set<string>();
+    const result: CreateLeadChannelDto[] = [];
     for (const channel of channels) {
       const value = channel.value?.trim();
       if (!value) continue;
-      byType.set(channel.type, value);
+      const key = `${channel.type}:${value}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      result.push({ type: channel.type, value });
     }
-    return [...byType.entries()].map(([type, value]) => ({ type, value }));
+    return result;
   }
 
   private toResponse(lead: Lead) {

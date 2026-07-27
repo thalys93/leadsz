@@ -12,7 +12,7 @@ import { Lead } from './lead.entity';
 import { ChannelType } from 'src/enums/ChannelType';
 
 @Entity()
-@Unique(['leadId', 'type'])
+@Unique(['leadId', 'type', 'value'])
 export class ContactChannel {
   @PrimaryGeneratedColumn('uuid')
   id: string;

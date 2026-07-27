@@ -51,9 +51,46 @@ export function getPhoneCountry(iso: string): PhoneCountry {
   )
 }
 
+export function onlyPhoneDigits(value: string): string {
+  return value.replace(/\D/g, "")
+}
+
+function nationalInRange(country: PhoneCountry, nationalDigits: string): boolean {
+  return (
+    nationalDigits.length >= country.minNationalLength &&
+    nationalDigits.length <= country.maxNationalLength
+  )
+}
+
+function sortedCountriesByDialCode(): PhoneCountry[] {
+  return [...PHONE_COUNTRIES].sort((a, b) => {
+    const byLength = b.dialCode.length - a.dialCode.length
+    if (byLength !== 0) return byLength
+    const rank = (iso: string) =>
+      iso === DEFAULT_PHONE_COUNTRY ? 0 : iso === "US" ? 1 : 2
+    return rank(a.iso) - rank(b.iso)
+  })
+}
+
+function matchDialCode(
+  digits: string,
+  countries: PhoneCountry[]
+): { iso: string; nationalDigits: string } | null {
+  for (const country of countries) {
+    if (!digits.startsWith(country.dialCode)) continue
+    const nationalDigits = digits
+      .slice(country.dialCode.length)
+      .slice(0, country.maxNationalLength)
+    if (!nationalInRange(country, nationalDigits)) continue
+    if (digits.length - country.dialCode.length > country.maxNationalLength) continue
+    return { iso: country.iso, nationalDigits }
+  }
+  return null
+}
+
 export function formatNationalNumber(digits: string, iso: string): string {
   const country = getPhoneCountry(iso)
-  const d = digits.replace(/\D/g, "").slice(0, country.maxNationalLength)
+  const d = onlyPhoneDigits(digits).slice(0, country.maxNationalLength)
 
   if (iso === "BR") {
     if (!d) return ""
@@ -71,80 +108,75 @@ export function formatNationalNumber(digits: string, iso: string): string {
 }
 
 export function composePhone(iso: string, nationalDigits: string): string {
-  const digits = nationalDigits.replace(/\D/g, "")
+  const digits = onlyPhoneDigits(nationalDigits)
   if (!digits) return ""
   const country = getPhoneCountry(iso)
   return `+${country.dialCode} ${formatNationalNumber(digits, iso)}`
 }
 
-export function parsePhone(value: string): {
+export function parsePhone(
+  value: string,
+  preferredIso = DEFAULT_PHONE_COUNTRY
+): {
   iso: string
   nationalDigits: string
 } {
   const trimmed = value.trim()
   if (!trimmed) {
-    return { iso: DEFAULT_PHONE_COUNTRY, nationalDigits: "" }
+    return { iso: preferredIso, nationalDigits: "" }
   }
 
-  const digits = trimmed.replace(/\D/g, "")
-  const sorted = [...PHONE_COUNTRIES].sort((a, b) => {
-    const byLength = b.dialCode.length - a.dialCode.length
-    if (byLength !== 0) return byLength
-    const rank = (iso: string) =>
-      iso === DEFAULT_PHONE_COUNTRY ? 0 : iso === "US" ? 1 : 2
-    return rank(a.iso) - rank(b.iso)
-  })
+  const digits = onlyPhoneDigits(trimmed)
+  if (!digits) {
+    return { iso: preferredIso, nationalDigits: "" }
+  }
+
+  const preferred = getPhoneCountry(preferredIso)
+  const sorted = sortedCountriesByDialCode()
 
   if (trimmed.startsWith("+")) {
-    for (const country of sorted) {
-      if (digits.startsWith(country.dialCode)) {
-        return {
-          iso: country.iso,
-          nationalDigits: digits
-            .slice(country.dialCode.length)
-            .slice(0, country.maxNationalLength),
-        }
+    return (
+      matchDialCode(digits, sorted) ?? {
+        iso: preferred.iso,
+        nationalDigits: digits.slice(0, preferred.maxNationalLength),
       }
-    }
+    )
   }
 
-  for (const country of sorted) {
-    if (
-      digits.startsWith(country.dialCode) &&
-      digits.length > country.dialCode.length + country.minNationalLength - 1
-    ) {
-      return {
-        iso: country.iso,
-        nationalDigits: digits
-          .slice(country.dialCode.length)
-          .slice(0, country.maxNationalLength),
-      }
-    }
+  const preferredWithDial = matchDialCode(digits, [preferred])
+  if (preferredWithDial) return preferredWithDial
+
+  if (nationalInRange(preferred, digits)) {
+    return { iso: preferred.iso, nationalDigits: digits }
+  }
+
+  if (digits.length > preferred.maxNationalLength) {
+    const international = matchDialCode(digits, sorted)
+    if (international) return international
   }
 
   return {
-    iso: DEFAULT_PHONE_COUNTRY,
-    nationalDigits: digits.slice(0, getPhoneCountry(DEFAULT_PHONE_COUNTRY).maxNationalLength),
+    iso: preferred.iso,
+    nationalDigits: digits.slice(0, preferred.maxNationalLength),
   }
 }
 
-export function formatPhone(value: string): string {
-  const { iso, nationalDigits } = parsePhone(value)
+export function formatPhone(value: string, preferredIso = DEFAULT_PHONE_COUNTRY): string {
+  const { iso, nationalDigits } = parsePhone(value, preferredIso)
   return composePhone(iso, nationalDigits)
 }
 
-export function isValidPhone(value: string): boolean {
+export function isValidPhone(value: string, preferredIso = DEFAULT_PHONE_COUNTRY): boolean {
   const trimmed = value.trim()
   if (!trimmed) return false
-  const { iso, nationalDigits } = parsePhone(trimmed)
-  const country = getPhoneCountry(iso)
-  return (
-    nationalDigits.length >= country.minNationalLength &&
-    nationalDigits.length <= country.maxNationalLength
-  )
+  const { iso, nationalDigits } = parsePhone(trimmed, preferredIso)
+  return nationalInRange(getPhoneCountry(iso), nationalDigits)
 }
 
-export function isOptionalPhoneValid(value: string): boolean {
+export function isOptionalPhoneValid(
+  value: string,
+  preferredIso = DEFAULT_PHONE_COUNTRY
+): boolean {
   const trimmed = value.trim()
-  return trimmed === "" || isValidPhone(trimmed)
+  return trimmed === "" || isValidPhone(trimmed, preferredIso)
 }

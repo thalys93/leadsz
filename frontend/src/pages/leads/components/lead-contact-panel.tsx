@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
 import { ExternalLink, Mail, MessageCircle, Send, Sparkles } from "lucide-react"
@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { TEMPLATE_PURPOSE_LABELS } from "@/lib/crm"
+import { formatPhone } from "@/lib/phone"
 import {
   buildLeadPlaceholderValues,
   interpolateTemplate,
@@ -15,7 +16,7 @@ import {
   listTemplates,
 } from "@/services/templates"
 import { sendLeadEmail } from "@/services/emails"
-import type { Lead } from "@/types/lead"
+import type { ContactChannel, Lead } from "@/types/lead"
 import type { MessageTemplate, TemplatePurpose } from "@/types/template"
 import { cn } from "@/lib/utils"
 
@@ -40,18 +41,49 @@ function resolveDefaultMode(lead: Lead): ContactMode {
   return "EMAIL"
 }
 
+function channelsOfType(channels: ContactChannel[] | undefined, type: ContactMode) {
+  return channels?.filter((channel) => channel.type === type) ?? []
+}
+
+function pickChannelValue(
+  channels: ContactChannel[],
+  current: string
+): string {
+  if (channels.some((channel) => channel.value === current)) return current
+  return channels[0]?.value ?? ""
+}
+
 export function LeadContactPanel({ lead }: { lead: Lead }) {
   const queryClient = useQueryClient()
-  const emailChannel = lead.channels?.find((c) => c.type === "EMAIL")?.value ?? ""
-  const whatsappChannel =
-    lead.channels?.find((c) => c.type === "WHATSAPP")?.value ?? ""
+  const emailChannels = useMemo(
+    () => channelsOfType(lead.channels, "EMAIL"),
+    [lead.channels]
+  )
+  const whatsappChannels = useMemo(
+    () => channelsOfType(lead.channels, "WHATSAPP"),
+    [lead.channels]
+  )
 
   const [mode, setMode] = useState<ContactMode>(() => resolveDefaultMode(lead))
+  const [selectedEmail, setSelectedEmail] = useState(
+    () => emailChannels[0]?.value ?? ""
+  )
+  const [selectedWhatsapp, setSelectedWhatsapp] = useState(
+    () => whatsappChannels[0]?.value ?? ""
+  )
   const [selectedTemplateId, setSelectedTemplateId] = useState("")
   const [purpose, setPurpose] = useState<TemplatePurpose>("PRIMEIRO_CONTATO")
   const [subject, setSubject] = useState("")
   const [body, setBody] = useState("")
   const [whatsappMessage, setWhatsappMessage] = useState("")
+
+  useEffect(() => {
+    setSelectedEmail((current) => pickChannelValue(emailChannels, current))
+  }, [emailChannels])
+
+  useEffect(() => {
+    setSelectedWhatsapp((current) => pickChannelValue(whatsappChannels, current))
+  }, [whatsappChannels])
 
   const libraryQuery = useQuery({
     queryKey: ["templates", { channel: mode }],
@@ -65,7 +97,7 @@ export function LeadContactPanel({ lead }: { lead: Lead }) {
       sendLeadEmail(lead.id, {
         subject,
         body,
-        to: emailChannel || undefined,
+        to: selectedEmail || undefined,
       }),
     onSuccess: () => {
       setSubject("")
@@ -104,14 +136,14 @@ export function LeadContactPanel({ lead }: { lead: Lead }) {
   })
 
   const canSendEmail =
-    emailChannel.trim().length > 0 &&
+    selectedEmail.trim().length > 0 &&
     subject.trim().length > 0 &&
     body.trim().length > 0
 
   const whatsappUrl = useMemo(() => {
-    if (!whatsappChannel.trim() || !whatsappMessage.trim()) return null
-    return buildWhatsAppUrl(whatsappChannel, whatsappMessage)
-  }, [whatsappChannel, whatsappMessage])
+    if (!selectedWhatsapp.trim() || !whatsappMessage.trim()) return null
+    return buildWhatsAppUrl(selectedWhatsapp, whatsappMessage)
+  }, [selectedWhatsapp, whatsappMessage])
 
   function openWhatsApp() {
     if (!whatsappUrl) return
@@ -149,7 +181,8 @@ export function LeadContactPanel({ lead }: { lead: Lead }) {
     setSelectedTemplateId("")
   }
 
-  const channelReady = mode === "EMAIL" ? Boolean(emailChannel) : Boolean(whatsappChannel)
+  const channelReady =
+    mode === "EMAIL" ? Boolean(selectedEmail) : Boolean(selectedWhatsapp)
 
   return (
     <div className="space-y-5">
@@ -258,27 +291,44 @@ export function LeadContactPanel({ lead }: { lead: Lead }) {
             <div className="space-y-1">
               <p className="text-sm font-medium">Enviar e-mail</p>
               <p className="text-xs text-muted-foreground">
-                O destinatário vem do canal de e-mail cadastrado e não pode ser
-                alterado aqui.
+                Escolha o destinatário entre os e-mails cadastrados neste lead.
               </p>
             </div>
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="contact-email-to">Para</Label>
-            <Input
-              id="contact-email-to"
-              type="email"
-              value={emailChannel}
-              readOnly
-              disabled
-              placeholder="Nenhum e-mail cadastrado"
-            />
-            {!emailChannel ? (
-              <p className="text-xs text-muted-foreground">
-                Cadastre um canal de e-mail na aba Canais para enviar mensagens.
-              </p>
-            ) : null}
+            {emailChannels.length > 0 ? (
+              <select
+                id="contact-email-to"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                value={selectedEmail}
+                onChange={(e) => setSelectedEmail(e.target.value)}
+              >
+                {emailChannels.map((channel, index) => (
+                  <option
+                    key={channel.id ?? `${channel.value}-${index}`}
+                    value={channel.value}
+                  >
+                    {channel.value}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <>
+                <Input
+                  id="contact-email-to"
+                  type="email"
+                  value=""
+                  readOnly
+                  disabled
+                  placeholder="Nenhum e-mail cadastrado"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Cadastre um canal de e-mail na aba Canais para enviar mensagens.
+                </p>
+              </>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -289,7 +339,7 @@ export function LeadContactPanel({ lead }: { lead: Lead }) {
               onChange={(e) => setSubject(e.target.value)}
               placeholder="Assunto da mensagem"
               required
-              disabled={!emailChannel}
+              disabled={!selectedEmail}
             />
           </div>
 
@@ -306,7 +356,7 @@ export function LeadContactPanel({ lead }: { lead: Lead }) {
               onChange={(e) => setBody(e.target.value)}
               placeholder="Escreva sua mensagem..."
               required
-              disabled={!emailChannel}
+              disabled={!selectedEmail}
             />
           </div>
 
@@ -328,27 +378,44 @@ export function LeadContactPanel({ lead }: { lead: Lead }) {
             <div className="space-y-1">
               <p className="text-sm font-medium">Abrir no WhatsApp</p>
               <p className="text-xs text-muted-foreground">
-                Montamos um link com a mensagem pronta para abrir a conversa no
-                WhatsApp Web ou no app.
+                Escolha o número e abra a conversa no WhatsApp Web ou no app.
               </p>
             </div>
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="contact-whatsapp-to">Telefone</Label>
-            <Input
-              id="contact-whatsapp-to"
-              type="tel"
-              value={whatsappChannel}
-              readOnly
-              disabled
-              placeholder="Nenhum WhatsApp cadastrado"
-            />
-            {!whatsappChannel ? (
-              <p className="text-xs text-muted-foreground">
-                Cadastre um canal de WhatsApp na aba Canais para gerar o link.
-              </p>
-            ) : null}
+            {whatsappChannels.length > 0 ? (
+              <select
+                id="contact-whatsapp-to"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                value={selectedWhatsapp}
+                onChange={(e) => setSelectedWhatsapp(e.target.value)}
+              >
+                {whatsappChannels.map((channel, index) => (
+                  <option
+                    key={channel.id ?? `${channel.value}-${index}`}
+                    value={channel.value}
+                  >
+                    {formatPhone(channel.value) || channel.value}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <>
+                <Input
+                  id="contact-whatsapp-to"
+                  type="tel"
+                  value=""
+                  readOnly
+                  disabled
+                  placeholder="Nenhum WhatsApp cadastrado"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Cadastre um canal de WhatsApp na aba Canais para gerar o link.
+                </p>
+              </>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -363,7 +430,7 @@ export function LeadContactPanel({ lead }: { lead: Lead }) {
               value={whatsappMessage}
               onChange={(e) => setWhatsappMessage(e.target.value)}
               placeholder="Escreva a mensagem que vai abrir no WhatsApp..."
-              disabled={!whatsappChannel}
+              disabled={!selectedWhatsapp}
             />
           </div>
 

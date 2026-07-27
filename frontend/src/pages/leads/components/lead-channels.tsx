@@ -57,10 +57,7 @@ export function LeadChannels({
     setDraft((prev) =>
       prev.map((channel, i) => {
         if (i !== index) return channel
-        return {
-          ...channel,
-          value: channel.type === "WHATSAPP" ? formatPhone(value) : value,
-        }
+        return { ...channel, value }
       })
     )
     setErrors((prev) => {
