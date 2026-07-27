@@ -35,9 +35,30 @@ async function bootstrap() {
 
   app.setGlobalPrefix(`api/${version}`);
 
-  const corsOrigin = process.env.CORS_ORIGIN;
+  const defaultCorsOrigins = [
+    'http://localhost:5173',
+    'http://localhost:8080',
+    'https://leadz.thalysdev.com',
+    'https://thalysdev.com',
+    'https://www.thalysdev.com',
+  ];
+  const envCorsOrigins = (process.env.CORS_ORIGIN ?? '')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+  const allowedOrigins = [...new Set([...defaultCorsOrigins, ...envCorsOrigins])];
+
   app.enableCors({
-    origin: corsOrigin ? corsOrigin.split(',') : true,
+    origin: (
+      origin: string | undefined,
+      callback: (err: Error | null, allow?: boolean) => void,
+    ) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+        return;
+      }
+      callback(null, false);
+    },
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: [
       'Content-Type',
