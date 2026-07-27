@@ -12,6 +12,7 @@ import LeadsPage from "@/pages/leads"
 import LeadDetailPage from "@/pages/leads/detail"
 import TemplatesPage from "@/pages/templates"
 import TemplateFormPage from "@/pages/templates/form"
+import ServicesPage from "@/pages/services"
 import TeamPage from "@/pages/team"
 import TestEmailPage from "@/pages/test-email"
 import ProfilePage from "@/pages/profile"
@@ -39,6 +40,7 @@ export const AppRoutesGroup: RoutesGroup = {
     { path: "dashboard", element: DashboardPage },
     { path: "leads", element: LeadsPage },
     { path: "leads/:id", element: LeadDetailPage },
+    { path: "services", element: ServicesPage },
     { path: "templates", element: TemplatesPage },
     { path: "templates/new", element: TemplateFormPage },
     { path: "templates/:id/edit", element: TemplateFormPage },

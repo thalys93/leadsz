@@ -10,6 +10,7 @@ import {
 } from 'typeorm';
 import { Company } from 'src/company/entities/company.entity';
 import { User } from 'src/user/entities/user.entity';
+import { Service } from 'src/service/entities/service.entity';
 import { ChannelType } from 'src/enums/ChannelType';
 import { LeadStage } from 'src/enums/LeadStage';
 import { ContactChannel } from './contact-channel.entity';
@@ -46,6 +47,13 @@ export class Lead {
     enum: ChannelType,
   })
   primaryChannel: ChannelType;
+
+  @Column({ name: 'service_id', type: 'uuid', nullable: true })
+  serviceId: string | null;
+
+  @ManyToOne(() => Service, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'service_id' })
+  catalogService: Service | null;
 
   @Column({ type: 'text' })
   service: string;

@@ -10,6 +10,7 @@ import { IPaginationOptions } from 'nestjs-typeorm-paginate';
 import { Repository } from 'typeorm';
 import { Lead } from './entities/lead.entity';
 import { ContactChannel } from './entities/contact-channel.entity';
+import { Service } from 'src/service/entities/service.entity';
 import { CreateLeadDto, CreateLeadChannelDto } from './dto/create-lead.dto';
 import { UpdateLeadDto } from './dto/update-lead.dto';
 import { ToggleCheckpointDto } from './dto/toggle-checkpoint.dto';
@@ -45,6 +46,8 @@ export class LeadService {
     private readonly leadRepository: Repository<Lead>,
     @InjectRepository(ContactChannel)
     private readonly channelRepository: Repository<ContactChannel>,
+    @InjectRepository(Service)
+    private readonly serviceRepository: Repository<Service>,
     private readonly timelineService: TimelineService,
     private readonly mailService: MailService,
   ) {}
@@ -54,6 +57,20 @@ export class LeadService {
       throw new ForbiddenException('api.company.required');
     }
     return authUser.companyId;
+  }
+
+  private async resolveCatalogService(
+    companyId: string,
+    serviceId: string | null | undefined,
+  ): Promise<Service | null> {
+    if (serviceId == null) return null;
+    const catalog = await this.serviceRepository.findOne({
+      where: { id: serviceId, companyId },
+    });
+    if (!catalog) {
+      throw new NotFoundException('api.service.not.found');
+    }
+    return catalog;
   }
 
   private uniqueChannels(channels: CreateLeadChannelDto[] = []) {
@@ -88,6 +105,11 @@ export class LeadService {
   async create(authUser: AuthUser, dto: CreateLeadDto) {
     const companyId = this.requireCompanyId(authUser);
     const channels = this.uniqueChannels(dto.channels);
+    const catalog = await this.resolveCatalogService(companyId, dto.serviceId);
+    const serviceName = catalog?.name ?? dto.service?.trim() ?? '';
+    if (!serviceName) {
+      throw new BadRequestException('api.lead.service.required');
+    }
 
     const lead = this.leadRepository.create({
       companyId,
@@ -95,7 +117,8 @@ export class LeadService {
       contactName: dto.contactName.trim(),
       companyName: dto.companyName?.trim() || null,
       primaryChannel: dto.primaryChannel,
-      service: dto.service.trim(),
+      serviceId: catalog?.id ?? null,
+      service: serviceName,
       dealValue: dto.dealValue != null ? String(dto.dealValue) : null,
       stage: dto.stage ?? LeadStage.LEAD,
       nextAction: dto.nextAction?.trim() || null,
@@ -179,6 +202,32 @@ export class LeadService {
     };
   }
 
+  async suggestions(authUser: AuthUser) {
+    const companyId = this.requireCompanyId(authUser);
+
+    const recentDistinct = async (column: 'service' | 'nextAction') => {
+      const rows = await this.leadRepository
+        .createQueryBuilder('lead')
+        .select(`lead.${column}`, 'value')
+        .addSelect('MAX(lead.updatedAt)', 'lastUsed')
+        .where('lead.companyId = :companyId', { companyId })
+        .andWhere(`lead.${column} IS NOT NULL`)
+        .andWhere(`lead.${column} != ''`)
+        .groupBy(`lead.${column}`)
+        .orderBy('"lastUsed"', 'DESC')
+        .limit(50)
+        .getRawMany<{ value: string }>();
+      return rows.map((row) => row.value).filter(Boolean);
+    };
+
+    const [services, nextActions] = await Promise.all([
+      recentDistinct('service'),
+      recentDistinct('nextAction'),
+    ]);
+
+    return { services, nextActions };
+  }
+
   async findOne(authUser: AuthUser, id: string) {
     const companyId = this.requireCompanyId(authUser);
     const lead = await this.requireLead(companyId, id);
@@ -198,7 +247,18 @@ export class LeadService {
     if (dto.primaryChannel !== undefined) {
       lead.primaryChannel = dto.primaryChannel;
     }
-    if (dto.service !== undefined) {
+    if (dto.serviceId !== undefined) {
+      const catalog = await this.resolveCatalogService(
+        companyId,
+        dto.serviceId,
+      );
+      lead.serviceId = catalog?.id ?? null;
+      if (catalog) {
+        lead.service = catalog.name;
+      } else if (dto.service !== undefined) {
+        lead.service = dto.service.trim();
+      }
+    } else if (dto.service !== undefined) {
       lead.service = dto.service.trim();
     }
     if (dto.dealValue !== undefined) {

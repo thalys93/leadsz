@@ -16,6 +16,7 @@ import { LeadModule } from './lead/lead.module';
 import { TimelineModule } from './timeline/timeline.module';
 import { MessageTemplateModule } from './message-template/message-template.module';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { ServiceModule } from './service/service.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
     LeadModule,
     TimelineModule,
     MessageTemplateModule,
+    ServiceModule,
     DashboardModule,
     SeedingModule,
   ],

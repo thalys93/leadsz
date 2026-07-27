@@ -64,6 +64,7 @@ export default function DashboardPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["dashboard"] })
       queryClient.invalidateQueries({ queryKey: ["leads"] })
+      queryClient.invalidateQueries({ queryKey: ["lead-suggestions"] })
       toast.success("Lead criado")
       setLeadDialogOpen(false)
     },

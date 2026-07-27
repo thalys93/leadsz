@@ -80,6 +80,15 @@ export class LeadController {
     );
   }
 
+  @Get('suggestions')
+  @HttpCode(200)
+  @ApiOperation({
+    summary: 'Sugestões distintas de serviço e próxima ação da company',
+  })
+  suggestions(@User() authUser: AuthUser) {
+    return this.leadService.suggestions(authUser);
+  }
+
   @Get(':id')
   @HttpCode(200)
   @ApiOperation({ summary: 'Detalhe do lead' })

@@ -1,22 +1,26 @@
 import { useMemo, useState } from "react"
 import type { DragEvent } from "react"
 import type { Lead, LeadStage } from "@/types/lead"
+import type { CatalogService } from "@/types/service"
 import {
   CHANNEL_LABELS,
   STAGE_LABELS,
   STAGE_ORDER,
-  formatCurrencyBRL,
   formatDatePtBR,
 } from "@/lib/crm"
 import { TemperatureBadge } from "./temperature-badge"
+import { DealValueDisplay } from "./deal-value-display"
+import { ServiceLabel } from "@/components/service-label"
 import { cn } from "@/lib/utils"
 
 export function LeadKanban({
   leads,
+  servicesById,
   onSelect,
   onStageChange,
 }: {
   leads: Lead[]
+  servicesById: Map<string, CatalogService>
   onSelect: (lead: Lead) => void
   onStageChange: (leadId: string, stage: LeadStage) => void
 }) {
@@ -143,10 +147,26 @@ export function LeadKanban({
                         {lead.companyName ||
                           CHANNEL_LABELS[lead.primaryChannel]}
                       </p>
+                      <ServiceLabel
+                        name={lead.service}
+                        icon={
+                          lead.serviceId
+                            ? servicesById.get(lead.serviceId)?.icon
+                            : null
+                        }
+                        className="max-w-full"
+                        iconClassName="size-6 rounded"
+                      />
                       <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
-                        <span className="tabular-nums">
-                          {formatCurrencyBRL(lead.dealValue)}
-                        </span>
+                        <DealValueDisplay
+                          dealValue={lead.dealValue}
+                          anchors={
+                            lead.serviceId
+                              ? servicesById.get(lead.serviceId)
+                              : null
+                          }
+                          className="text-xs"
+                        />
                         <span className="truncate">
                           {formatDatePtBR(lead.nextActionAt)}
                         </span>

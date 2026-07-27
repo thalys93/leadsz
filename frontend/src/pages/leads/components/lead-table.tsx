@@ -1,14 +1,16 @@
 import type { Lead, LeadStage } from "@/types/lead"
+import type { CatalogService } from "@/types/service"
 import {
   CHANNEL_LABELS,
   STAGE_LABELS,
   STAGE_ORDER,
-  formatCurrencyBRL,
   formatDatePtBR,
   isOverdue,
 } from "@/lib/crm"
 import { StageBadge } from "./stage-badge"
 import { TemperatureBadge } from "./temperature-badge"
+import { DealValueDisplay } from "./deal-value-display"
+import { ServiceLabel } from "@/components/service-label"
 import { cn } from "@/lib/utils"
 import {
   ContextMenu,
@@ -24,13 +26,21 @@ import { ExternalLink, Pencil, Trash2, GitBranch } from "lucide-react"
 
 type Props = {
   leads: Lead[]
+  servicesById: Map<string, CatalogService>
   onSelect: (lead: Lead) => void
   onEdit: (lead: Lead) => void
   onDelete: (lead: Lead) => void
   onStageChange: (lead: Lead, stage: LeadStage) => void
 }
 
-export function LeadTable({ leads, onSelect, onEdit, onDelete, onStageChange }: Props) {
+export function LeadTable({
+  leads,
+  servicesById,
+  onSelect,
+  onEdit,
+  onDelete,
+  onStageChange,
+}: Props) {
   return (
     <div className="overflow-x-auto rounded-xl border border-border">
       <table className="w-full min-w-[880px] text-left text-sm">
@@ -62,9 +72,25 @@ export function LeadTable({ leads, onSelect, onEdit, onDelete, onStageChange }: 
                       </p>
                     </td>
                     <td className="px-4 py-3">{CHANNEL_LABELS[lead.primaryChannel]}</td>
-                    <td className="px-4 py-3">{lead.service || "—"}</td>
-                    <td className="px-4 py-3 tabular-nums">
-                      {formatCurrencyBRL(lead.dealValue)}
+                    <td className="px-4 py-3">
+                      <ServiceLabel
+                        name={lead.service}
+                        icon={
+                          lead.serviceId
+                            ? servicesById.get(lead.serviceId)?.icon
+                            : null
+                        }
+                      />
+                    </td>
+                    <td className="px-4 py-3">
+                      <DealValueDisplay
+                        dealValue={lead.dealValue}
+                        anchors={
+                          lead.serviceId
+                            ? servicesById.get(lead.serviceId)
+                            : null
+                        }
+                      />
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
