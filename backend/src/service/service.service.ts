@@ -22,6 +22,7 @@ import {
 export type PublicService = {
   id: string;
   name: string;
+  translateKey: string | null;
   scopeIn: string | null;
   typicalDeadline: string | null;
   minPrice: string | null;
@@ -160,6 +161,7 @@ export class ServiceService {
       select: {
         id: true,
         name: true,
+        translateKey: true,
         scopeIn: true,
         typicalDeadline: true,
         minPrice: true,
@@ -170,6 +172,7 @@ export class ServiceService {
     return services.map((service) => ({
       id: service.id,
       name: service.name,
+      translateKey: service.translateKey,
       scopeIn: service.scopeIn,
       typicalDeadline: service.typicalDeadline,
       minPrice: service.minPrice,
@@ -213,6 +216,16 @@ export class ServiceService {
           { companyId, serviceId: id },
           { service: name },
         );
+      }
+    }
+
+    if (dto.translateKey !== undefined) {
+      const translateKey = dto.translateKey?.trim() || null;
+      if (translateKey !== service.translateKey) {
+        if (translateKey) {
+          await this.assertUniqueTranslateKey(companyId, translateKey, id);
+        }
+        service.translateKey = translateKey;
       }
     }
 
