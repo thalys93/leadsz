@@ -8,6 +8,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { MessageTemplate } from './entities/message-template.entity';
 import { Lead } from 'src/lead/entities/lead.entity';
+import { User } from 'src/user/entities/user.entity';
 import { CreateMessageTemplateDto } from './dto/create-message-template.dto';
 import { UpdateMessageTemplateDto } from './dto/update-message-template.dto';
 import { GenerateTemplateDto } from './dto/generate-template.dto';
@@ -16,7 +17,7 @@ import { AuthUser } from 'src/auth/interfaces/auth-user.interface';
 import { ChannelType } from 'src/enums/ChannelType';
 import { TemplatePurpose } from 'src/enums/TemplatePurpose';
 import { TimelineEventType } from 'src/enums/TimelineEventType';
-import { GroqClient } from './groq.client';
+import { GroqClient, GroqSenderContext } from './groq.client';
 import { TimelineService } from 'src/timeline/timeline.service';
 import { MailService } from 'src/mail/mail.service';
 import { GenerateLibraryTemplateDto } from './dto/generate-library-template.dto';
@@ -34,6 +35,8 @@ export class MessageTemplateService {
     private readonly templateRepository: Repository<MessageTemplate>,
     @InjectRepository(Lead)
     private readonly leadRepository: Repository<Lead>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
     private readonly groqClient: GroqClient,
     private readonly timelineService: TimelineService,
     private readonly mailService: MailService,
@@ -65,6 +68,31 @@ export class MessageTemplateService {
       throw new NotFoundException('api.message_template.not.found');
     }
     return template;
+  }
+
+  private async resolveSender(authUser: AuthUser): Promise<GroqSenderContext> {
+    const user = await this.userRepository.findOne({
+      where: { id: authUser.id },
+      relations: ['company'],
+    });
+
+    return {
+      name: user?.name ?? authUser.name ?? authUser.email,
+      companyName: user?.company?.name ?? null,
+      jobTitle: user?.jobTitle ?? null,
+      website: user?.website ?? null,
+    };
+  }
+
+  private draftInspirationFromDto(
+    dto: GenerateTemplateDto | GenerateLibraryTemplateDto,
+  ) {
+    return {
+      title: dto.title,
+      currentSubject: dto.currentSubject,
+      currentBody: dto.currentBody,
+      extraContext: dto.extraContext,
+    };
   }
 
   async create(authUser: AuthUser, dto: CreateMessageTemplateDto) {
@@ -160,6 +188,7 @@ export class MessageTemplateService {
   ) {
     const companyId = this.requireCompanyId(authUser);
     const lead = await this.requireLead(companyId, leadId);
+    const sender = await this.resolveSender(authUser);
     const recentEvents = await this.timelineService.recent(
       companyId,
       leadId,
@@ -169,7 +198,8 @@ export class MessageTemplateService {
     const draft = await this.groqClient.generateDraft({
       channel: dto.channel,
       purpose: dto.purpose,
-      extraContext: dto.extraContext,
+      sender,
+      ...this.draftInspirationFromDto(dto),
       lead: {
         contactName: lead.contactName,
         companyName: lead.companyName,
@@ -202,11 +232,13 @@ export class MessageTemplateService {
     dto: GenerateLibraryTemplateDto,
   ) {
     this.requireCompanyId(authUser);
+    const sender = await this.resolveSender(authUser);
 
     const draft = await this.groqClient.generateLibraryDraft({
       channel: dto.channel,
       purpose: dto.purpose,
-      extraContext: dto.extraContext,
+      sender,
+      ...this.draftInspirationFromDto(dto),
     });
 
     return {

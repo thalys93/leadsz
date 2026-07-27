@@ -49,6 +49,7 @@ const schema = z.object({
   ]),
   subject: z.string().optional(),
   body: z.string().min(1, "Escreva o conteúdo"),
+  extraContext: z.string().optional(),
   aiGenerated: z.boolean(),
 })
 
@@ -93,6 +94,7 @@ export default function TemplateFormPage() {
     defaultValues: {
       channel: "WHATSAPP",
       aiGenerated: false,
+      extraContext: "",
       ...applyPurposePreset("PRIMEIRO_CONTATO"),
     },
   })
@@ -109,12 +111,12 @@ export default function TemplateFormPage() {
       purpose: template.purpose,
       subject: template.subject ?? "",
       body: template.body,
+      extraContext: "",
       aiGenerated: template.aiGenerated,
     })
   }, [templateQuery.data, reset])
 
   const channel = watch("channel")
-  const purpose = watch("purpose")
   const body = watch("body")
 
   const saveMutation = useMutation({
@@ -130,11 +132,17 @@ export default function TemplateFormPage() {
   })
 
   const generateMutation = useMutation({
-    mutationFn: () =>
-      generateLibraryTemplateDraft({
-        channel: getValues("channel"),
-        purpose: getValues("purpose"),
-      }),
+    mutationFn: () => {
+      const values = getValues()
+      return generateLibraryTemplateDraft({
+        channel: values.channel,
+        purpose: values.purpose,
+        title: values.title || undefined,
+        currentSubject: values.subject || undefined,
+        currentBody: values.body || undefined,
+        extraContext: values.extraContext || undefined,
+      })
+    },
     onSuccess: (draft) => {
       setValue("body", draft.body, { shouldDirty: true })
       if (draft.subject) {
@@ -169,13 +177,13 @@ export default function TemplateFormPage() {
     })
   }
 
-  function applyPreset(nextPurpose: TemplatePurpose) {
-    const preset = applyPurposePreset(nextPurpose)
-    setValue("purpose", nextPurpose)
+  function applyPresetModel() {
+    const preset = applyPurposePreset(getValues("purpose"))
     setValue("title", preset.title ?? "", { shouldDirty: true })
     setValue("subject", preset.subject ?? "", { shouldDirty: true })
     setValue("body", preset.body ?? "", { shouldDirty: true })
     setValue("aiGenerated", false, { shouldDirty: true })
+    toast.success("Modelo aplicado ao conteúdo")
   }
 
   async function submit(values: FormValues) {
@@ -230,23 +238,6 @@ export default function TemplateFormPage() {
         </div>
       </div>
 
-      <div className="space-y-2 rounded-xl border border-border bg-card/70 p-4">
-        <p className="text-sm font-medium">Começar por propósito</p>
-        <div className="flex flex-wrap gap-2">
-          {PURPOSES.map((item) => (
-            <Button
-              key={item}
-              type="button"
-              size="sm"
-              variant={purpose === item ? "default" : "outline"}
-              onClick={() => applyPreset(item)}
-            >
-              {TEMPLATE_PURPOSE_LABELS[item]}
-            </Button>
-          ))}
-        </div>
-      </div>
-
       <form
         onSubmit={handleSubmit(submit)}
         className="space-y-5 rounded-xl border border-border bg-card/70 p-4 sm:p-5"
@@ -287,6 +278,15 @@ export default function TemplateFormPage() {
                 </option>
               ))}
             </select>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="mt-1"
+              onClick={applyPresetModel}
+            >
+              Aplicar modelo
+            </Button>
           </div>
         </div>
 
@@ -306,6 +306,15 @@ export default function TemplateFormPage() {
             />
           </div>
         ) : null}
+
+        <div className="space-y-1.5">
+          <Label htmlFor="extraContext">Contexto extra (opcional)</Label>
+          <Input
+            id="extraContext"
+            {...register("extraContext")}
+            placeholder="Ex.: mencionar portfólio ou tom mais informal"
+          />
+        </div>
 
         <div className="space-y-2">
           <div className="flex flex-wrap items-center justify-between gap-2">
@@ -351,7 +360,7 @@ export default function TemplateFormPage() {
           ) : null}
           <p className="text-xs text-muted-foreground">
             Ao usar o template em um lead, [[contactName]] e as demais variáveis são
-            substituídas pelos dados dele.
+            substituídas pelos dados dele. A IA gera do zero e usa o texto atual só como inspiração.
           </p>
         </div>
 
