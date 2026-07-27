@@ -8,6 +8,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Not, Repository } from 'typeorm';
 import { Service } from './entities/service.entity';
+import { Company } from 'src/company/entities/company.entity';
 import { Lead } from 'src/lead/entities/lead.entity';
 import { CreateServiceDto } from './dto/create-service.dto';
 import { UpdateServiceDto } from './dto/update-service.dto';
@@ -18,11 +19,22 @@ import {
   toPriceString,
 } from './service-price';
 
+export type PublicService = {
+  id: string;
+  name: string;
+  scopeIn: string | null;
+  typicalDeadline: string | null;
+  minPrice: string | null;
+  idealPrice: string | null;
+};
+
 @Injectable()
 export class ServiceService {
   constructor(
     @InjectRepository(Service)
     private readonly serviceRepository: Repository<Service>,
+    @InjectRepository(Company)
+    private readonly companyRepository: Repository<Company>,
     @InjectRepository(Lead)
     private readonly leadRepository: Repository<Lead>,
   ) {}
@@ -69,6 +81,21 @@ export class ServiceService {
     }
   }
 
+  private async assertUniqueTranslateKey(
+    companyId: string,
+    translateKey: string,
+    excludeId?: string,
+  ) {
+    const existing = await this.serviceRepository.findOne({
+      where: excludeId
+        ? { companyId, translateKey, id: Not(excludeId) }
+        : { companyId, translateKey },
+    });
+    if (existing) {
+      throw new ConflictException('api.service.translateKey.exists');
+    }
+  }
+
   async create(authUser: AuthUser, dto: CreateServiceDto) {
     const companyId = this.requireCompanyId(authUser);
     const name = dto.name.trim();
@@ -76,13 +103,19 @@ export class ServiceService {
       throw new BadRequestException('api.service.name.required');
     }
 
+    const translateKey = dto.translateKey?.trim() || null;
+
     this.assertAnchors(dto.minPrice, dto.idealPrice, dto.maxPrice);
     await this.assertUniqueName(companyId, name);
+    if (translateKey) {
+      await this.assertUniqueTranslateKey(companyId, translateKey);
+    }
 
     return this.serviceRepository.save(
       this.serviceRepository.create({
         companyId,
         name,
+        translateKey,
         icon: dto.icon?.trim() || null,
         minPrice: toPriceString(dto.minPrice),
         idealPrice: toPriceString(dto.idealPrice),
@@ -106,6 +139,42 @@ export class ServiceService {
       where,
       order: { name: 'ASC' },
     });
+  }
+
+  async findPublicByCompanySlug(slug: string): Promise<PublicService[]> {
+    const normalized = slug.trim().toLowerCase();
+    if (!normalized) {
+      throw new NotFoundException('api.company.not.found');
+    }
+
+    const company = await this.companyRepository.findOne({
+      where: { slug: normalized },
+    });
+    if (!company) {
+      throw new NotFoundException('api.company.not.found');
+    }
+
+    const services = await this.serviceRepository.find({
+      where: { companyId: company.id, active: true },
+      order: { name: 'ASC' },
+      select: {
+        id: true,
+        name: true,
+        scopeIn: true,
+        typicalDeadline: true,
+        minPrice: true,
+        idealPrice: true,
+      },
+    });
+
+    return services.map((service) => ({
+      id: service.id,
+      name: service.name,
+      scopeIn: service.scopeIn,
+      typicalDeadline: service.typicalDeadline,
+      minPrice: service.minPrice,
+      idealPrice: service.idealPrice,
+    }));
   }
 
   async findOne(authUser: AuthUser, id: string) {
