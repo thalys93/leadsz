@@ -52,6 +52,7 @@ type ViewMode = "table" | "grid"
 
 type FormState = {
   name: string
+  translateKey: string
   icon: string
   minPrice: string
   idealPrice: string
@@ -64,6 +65,7 @@ type FormState = {
 
 const emptyForm = (): FormState => ({
   name: "",
+  translateKey: "",
   icon: "Briefcase",
   minPrice: "",
   idealPrice: "",
@@ -85,6 +87,7 @@ function readStoredView(): ViewMode {
 function toForm(service: CatalogService): FormState {
   return {
     name: service.name,
+    translateKey: service.translateKey ?? "",
     icon: service.icon || "Briefcase",
     minPrice: service.minPrice ?? "",
     idealPrice: service.idealPrice ?? "",
@@ -100,6 +103,7 @@ function toPayload(form: FormState): CatalogServicePayload {
   const num = (v: string) => (v.trim() === "" ? null : Number(v))
   return {
     name: form.name.trim(),
+    translateKey: form.translateKey.trim() || null,
     icon: form.icon.trim() || null,
     minPrice: num(form.minPrice),
     idealPrice: num(form.idealPrice),
@@ -552,6 +556,22 @@ export default function ServicesPage() {
                   }
                   placeholder="Ex.: Landing page"
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="svc-translate-key">Translate key</Label>
+                <Input
+                  id="svc-translate-key"
+                  value={form.translateKey}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, translateKey: e.target.value }))
+                  }
+                  placeholder="Ex.: services.landingPage"
+                  className="font-mono text-sm"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Chave opcional para traduzir o serviço em outros lugares (i18n).
+                </p>
               </div>
 
               <div className="space-y-2">

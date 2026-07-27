@@ -2,6 +2,7 @@ export type CatalogService = {
   id: string
   companyId: string
   name: string
+  translateKey: string | null
   icon: string | null
   minPrice: string | null
   idealPrice: string | null
@@ -16,6 +17,7 @@ export type CatalogService = {
 
 export type CatalogServicePayload = {
   name: string
+  translateKey?: string | null
   icon?: string | null
   minPrice?: number | null
   idealPrice?: number | null

@@ -12,6 +12,7 @@ import { Company } from 'src/company/entities/company.entity';
 
 @Entity()
 @Unique(['companyId', 'name'])
+@Unique(['companyId', 'translateKey'])
 export class Service {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -25,6 +26,9 @@ export class Service {
 
   @Column({ type: 'text' })
   name: string;
+
+  @Column({ name: 'translate_key', type: 'text', nullable: true })
+  translateKey: string | null;
 
   @Column({ type: 'text', nullable: true })
   icon: string | null;

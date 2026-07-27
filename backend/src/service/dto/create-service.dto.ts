@@ -14,6 +14,11 @@ export class CreateServiceDto {
   @IsString()
   name: string;
 
+  @ApiPropertyOptional({ example: 'services.landingPage' })
+  @IsOptional()
+  @IsString()
+  translateKey?: string | null;
+
   @ApiPropertyOptional({ example: 'LayoutTemplate' })
   @IsOptional()
   @IsString()
