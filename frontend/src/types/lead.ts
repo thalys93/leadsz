@@ -45,6 +45,7 @@ export type Lead = {
   contactName: string
   companyName: string | null
   primaryChannel: ChannelType
+  serviceId?: string | null
   service: string | null
   dealValue: number | null
   stage: LeadStage
@@ -84,6 +85,7 @@ export type LeadPayload = {
   contactName: string
   companyName?: string | null
   primaryChannel: ChannelType
+  serviceId?: string | null
   service?: string | null
   dealValue?: number | null
   stage?: LeadStage

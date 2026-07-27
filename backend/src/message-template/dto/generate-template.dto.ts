@@ -12,6 +12,21 @@ export class GenerateTemplateDto {
   @IsEnum(TemplatePurpose)
   purpose: TemplatePurpose;
 
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  title?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  currentSubject?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  currentBody?: string;
+
   @ApiPropertyOptional({ example: 'Já enviei proposta na segunda' })
   @IsOptional()
   @IsString()

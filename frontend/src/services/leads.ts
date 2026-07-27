@@ -28,6 +28,11 @@ function normalizeLead(lead: Lead): Lead {
   }
 }
 
+export type LeadSuggestions = {
+  services: string[]
+  nextActions: string[]
+}
+
 export async function listLeads(filters: LeadListFilters = {}) {
   const { data } = await api.get<PaginatedLeads>("leads", {
     params: {
@@ -43,6 +48,11 @@ export async function listLeads(filters: LeadListFilters = {}) {
     ...data,
     items: data.items.map(normalizeLead),
   }
+}
+
+export async function getLeadSuggestions() {
+  const { data } = await api.get<LeadSuggestions>("leads/suggestions")
+  return data
 }
 
 export async function getLead(id: string) {

@@ -15,5 +15,20 @@ export class GenerateLibraryTemplateDto {
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
+  title?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  currentSubject?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  currentBody?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
   extraContext?: string;
 }

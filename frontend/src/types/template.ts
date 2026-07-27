@@ -43,3 +43,12 @@ export type GeneratedTemplateDraft = {
   subject: string | null
   body: string
 }
+
+export type GenerateTemplatePayload = {
+  channel: ChannelType
+  purpose: TemplatePurpose
+  title?: string
+  currentSubject?: string
+  currentBody?: string
+  extraContext?: string
+}

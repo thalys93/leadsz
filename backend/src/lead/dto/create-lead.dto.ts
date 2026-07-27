@@ -61,10 +61,15 @@ export class CreateLeadDto {
   @IsEnum(ChannelType)
   primaryChannel: ChannelType;
 
-  @ApiProperty({ example: 'Landing page' })
-  @IsNotEmpty()
+  @ApiPropertyOptional({ example: 'Landing page' })
+  @IsOptional()
   @IsString()
-  service: string;
+  service?: string;
+
+  @ApiPropertyOptional({ format: 'uuid' })
+  @IsOptional()
+  @IsUUID()
+  serviceId?: string | null;
 
   @ApiPropertyOptional({ example: 3500 })
   @IsOptional()

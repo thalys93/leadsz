@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { MessageTemplate } from './entities/message-template.entity';
 import { Lead } from 'src/lead/entities/lead.entity';
+import { User } from 'src/user/entities/user.entity';
 import { MessageTemplateService } from './message-template.service';
 import {
   LeadTemplateController,
@@ -13,7 +14,7 @@ import { MailModule } from 'src/mail/mail.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([MessageTemplate, Lead]),
+    TypeOrmModule.forFeature([MessageTemplate, Lead, User]),
     TimelineModule,
     MailModule,
   ],

@@ -1,0 +1,14 @@
+---
+description: Como exibir ícones de serviços no frontend
+globs:
+  - "frontend/src/**/*.{ts,tsx}"
+alwaysApply: false
+---
+
+# Service icons
+
+- Ícone do catálogo é string Lucide em `CatalogService.icon`
+- Resolver sempre via `resolveServiceIcon` / `SERVICE_ICON_OPTIONS` em `lib/service-icons.ts`
+- Para nome + ícone na UI, use `ServiceLabel` — não reinvente o chip
+- Superfícies obrigatórias: Serviços (lista/grid), Leads (tabela/kanban), detalhe do lead, `ServiceCombobox`
+- Sem `serviceId` / sem ícone: `ServiceLabel` cai no ícone default (`Briefcase`)

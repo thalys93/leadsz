@@ -4,7 +4,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
 import { LayoutGrid, Plus, Table2 } from "lucide-react"
 import { listLeads, createLead, updateLead, deleteLead } from "@/services/leads"
+import { listServices } from "@/services/catalog-services"
 import type { Lead, LeadListFilters, LeadPayload, LeadStage } from "@/types/lead"
+import type { CatalogService } from "@/types/service"
 import { LeadFilters } from "./components/lead-filters"
 import { LeadTable } from "./components/lead-table"
 import { LeadKanban } from "./components/lead-kanban"
@@ -63,13 +65,27 @@ export default function LeadsPage() {
     queryFn: () => listLeads(queryFilters),
   })
 
+  const servicesQuery = useQuery({
+    queryKey: ["services", "all"],
+    queryFn: () => listServices("all"),
+  })
+
   const leads = leadsQuery.data?.items ?? []
   const meta = leadsQuery.data?.meta
+
+  const servicesById = useMemo(() => {
+    const map = new Map<string, CatalogService>()
+    for (const service of servicesQuery.data ?? []) {
+      map.set(service.id, service)
+    }
+    return map
+  }, [servicesQuery.data])
 
   const createMutation = useMutation({
     mutationFn: (payload: LeadPayload) => createLead(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["leads"] })
+      queryClient.invalidateQueries({ queryKey: ["lead-suggestions"] })
       toast.success("Lead criado")
       setFormOpen(false)
     },
@@ -81,6 +97,7 @@ export default function LeadsPage() {
       updateLead(id, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["leads"] })
+      queryClient.invalidateQueries({ queryKey: ["lead-suggestions"] })
       toast.success("Lead atualizado")
       setEditingLead(null)
     },
@@ -92,6 +109,7 @@ export default function LeadsPage() {
       updateLead(id, { stage }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["leads"] })
+      queryClient.invalidateQueries({ queryKey: ["lead-suggestions"] })
       toast.success("Status atualizado")
     },
     onError: () => toast.error("Falha ao mover o lead"),
@@ -101,6 +119,7 @@ export default function LeadsPage() {
     mutationFn: (id: string) => deleteLead(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["leads"] })
+      queryClient.invalidateQueries({ queryKey: ["lead-suggestions"] })
       toast.success("Lead removido")
       setDeletingLead(null)
     },
@@ -187,6 +206,7 @@ export default function LeadsPage() {
       ) : view === "table" ? (
         <LeadTable
           leads={leads}
+          servicesById={servicesById}
           onSelect={openLead}
           onEdit={openEditForm}
           onDelete={setDeletingLead}
@@ -195,6 +215,7 @@ export default function LeadsPage() {
       ) : (
         <LeadKanban
           leads={leads}
+          servicesById={servicesById}
           onSelect={openLead}
           onStageChange={(id, stage) => stageMutation.mutate({ id, stage })}
         />

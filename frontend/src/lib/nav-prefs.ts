@@ -11,12 +11,14 @@ import {
   FolderKanban,
   Inbox,
   Layers,
+  Briefcase,
   type LucideIcon,
 } from "lucide-react"
 
 export type NavItemId =
   | "dashboard"
   | "leads"
+  | "services"
   | "templates"
   | "team"
   | "test-email"
@@ -43,6 +45,12 @@ export const NAV_ITEMS: NavItemDef[] = [
     defaultIcon: "ListChecks",
   },
   {
+    id: "services",
+    to: "/app/services",
+    label: "Serviços",
+    defaultIcon: "Briefcase",
+  },
+  {
     id: "templates",
     to: "/app/templates",
     label: "Templates",
@@ -67,6 +75,7 @@ export const NAV_ITEMS: NavItemDef[] = [
 export const NAV_ICON_OPTIONS: { name: string; icon: LucideIcon }[] = [
   { name: "LayoutDashboard", icon: LayoutDashboard },
   { name: "ListChecks", icon: ListChecks },
+  { name: "Briefcase", icon: Briefcase },
   { name: "FileText", icon: FileText },
   { name: "Users", icon: Users },
   { name: "MessageSquareText", icon: MessageSquareText },

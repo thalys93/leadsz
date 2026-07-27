@@ -64,6 +64,9 @@ export function LeadTemplatePanel({ lead }: { lead: Lead }) {
       generateTemplateDraft(lead.id, {
         channel,
         purpose,
+        title: `${TEMPLATE_PURPOSE_LABELS[purpose]} · ${lead.contactName}`,
+        currentSubject: subject || undefined,
+        currentBody: body || undefined,
         extraContext: extraContext || undefined,
       }),
     onSuccess: (draft) => {
@@ -71,6 +74,7 @@ export function LeadTemplatePanel({ lead }: { lead: Lead }) {
       setBody(draft.body)
       setSavedTemplateId(null)
       setAiGenerated(true)
+      toast.success("Rascunho gerado com IA")
     },
     onError: () => toast.error("Falha ao gerar template com IA"),
   })
@@ -259,6 +263,7 @@ export function LeadTemplatePanel({ lead }: { lead: Lead }) {
         disabled={generateMutation.isPending}
         onClick={() => generateMutation.mutate()}
       >
+        <Sparkles className="size-3.5" />
         {generateMutation.isPending ? "Gerando..." : "Gerar com IA"}
       </Button>
 

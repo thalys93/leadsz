@@ -1,11 +1,10 @@
 import api from "@/services/api"
-import type { ChannelType } from "@/types/lead"
 import type {
   GeneratedTemplateDraft,
+  GenerateTemplatePayload,
   MessageTemplate,
   MessageTemplateFilters,
   MessageTemplatePayload,
-  TemplatePurpose,
 } from "@/types/template"
 
 export async function listTemplates(filters: MessageTemplateFilters = {}) {
@@ -50,7 +49,7 @@ export async function deleteTemplate(id: string) {
 
 export async function generateTemplateDraft(
   leadId: string,
-  payload: { channel: ChannelType; purpose: TemplatePurpose; extraContext?: string }
+  payload: GenerateTemplatePayload
 ) {
   const { data } = await api.post<GeneratedTemplateDraft>(
     `leads/${leadId}/templates/generate`,
@@ -59,11 +58,9 @@ export async function generateTemplateDraft(
   return data
 }
 
-export async function generateLibraryTemplateDraft(payload: {
-  channel: ChannelType
-  purpose: TemplatePurpose
-  extraContext?: string
-}) {
+export async function generateLibraryTemplateDraft(
+  payload: GenerateTemplatePayload
+) {
   const { data } = await api.post<GeneratedTemplateDraft>(
     "templates/generate",
     payload

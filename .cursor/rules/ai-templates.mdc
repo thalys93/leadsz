@@ -1,0 +1,31 @@
+---
+description: Padrões da integração de IA para templates e contato
+globs:
+  - backend/src/message-template/**
+  - frontend/src/pages/templates/**
+  - frontend/src/pages/leads/components/lead-*-panel.tsx
+  - frontend/src/services/templates.ts
+alwaysApply: false
+---
+
+# IA de templates
+
+## Contexto obrigatório no generate
+
+- Sempre enviar `channel` e `purpose`
+- Enviar rascunho atual como inspiração: `title`, `currentSubject`, `currentBody`, `extraContext` quando existirem
+- Backend injeta perfil do remetente (`name`, `companyName`, `jobTitle`, `website`) e, no fluxo de lead, dados do lead (serviço, valor, estágio, timeline)
+
+## Comportamento de geração
+
+- Sempre gerar do zero
+- Texto atual / template selecionado serve só de inspiração (tom e pontos), nunca como base para copiar
+- System prompt deve variar por canal e propósito
+- Exigir parágrafos com `\n\n` no body
+
+## Frontend
+
+- Form da biblioteca: um único select de propósito (não chips duplicados)
+- Ao mudar propósito com body vazio, pode aplicar preset uma vez
+- Aba Contato reusa `POST /leads/:leadId/templates/generate` (sem endpoint novo)
+- Selecionar template no Contato interpola placeholders no cliente; Gerar com IA usa o texto atual como inspiração
